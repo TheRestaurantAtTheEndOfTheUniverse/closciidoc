@@ -10,38 +10,106 @@
        "\n")
 )
 
-(defn section [doc & {:keys [title level] :or {title "" level 1}}]
-  (str doc "\n"
-       (apply str (repeat (inc level) "=")) 
+(defn section [& {:keys [title level] :or {title "" level 1}}]
+  (str "\n"
+       (apply str (repeat (inc level) "="))
+       " "
        title "\n")
   )
 
 
-(defn it[content] (str "_" content "_"))
-(defn bf[content] (str "*" content "*"))
-(defn mo[content] (str "'" content "'"))
+(defn- delimited [delimiter content]
+  (str delimiter content delimiter))
 
-(defn ol [& elems]
-  (str "\n"
+(defn it[content] (str (delimited "_" content)))
+(defn bf[content] (str (delimited "*" content)))
+(defn mo[content] (str (delimited "`" content)))
+(defn sup[content] (str (delimited "^" content)))
+(defn sub[content] (str (delimited "~" content)))
+
+(defn ol [doc & elems]
+  (str doc "\n"
        (apply str (mapcat #(str ". " %1 "\n") elems))
-       "\n"
-))
+       "\n"))
 
-(defn- ilist [itemchar level & [elems]]
+(defn list-item [itemchar level content]
   (let [prefix (str (apply str (repeat level itemchar)))]
     (str "\n"
+         prefix
+         content
+         "\n")))
+
+(defn- ilist [doc itemchar level & [elems]]
+  (let [prefix (str (apply str (repeat level itemchar)))]
+    (str doc "\n"
+         (if (not (.endsWith doc "\n"))
+           "\n")
          (apply str (mapcat #(str prefix " " %1 "\n") elems))
          "\n")))
 
 
-(defn ul [& elems]
-  (ilist "*" 1 elems)
+(defn ul [doc & elems]
+  (ilist doc "*" 1 elems)
 )
 
 
-(str 
- (section (document :title "Hello" :author "Ingo") :title "eee" )
- (it "xxx")
- (mo "xxx")
- (bf "fdsksfjd")
- (ul "a" "b"))
+(defn- finish-paragraph[doc]
+  (str doc
+       (if (not (.endsWith doc "\n"))
+         "\n")))
+
+(defn- new-paragraph[doc]
+  (str (finish-paragraph doc) "\n"))
+
+
+(defn- admon[type content]
+  (str type " " content)
+)
+
+(defn note[content]
+  (admon "NOTE:" content)
+)
+
+(defn important[content]
+  (admon "IMPORTANT:" content)
+)
+
+(defn tip [content]
+  (admon "TIP:" content)
+)
+
+(defn warning[content]
+  (admon "WARNING:" content)
+)
+
+(defn caution[content]
+  (admon "CAUTION:" content)
+)
+
+(defn image[doc & {:keys [src options] :or {options ""}}]
+  (str (new-paragraph doc)
+       "image::" src "[" options "]"))
+
+(defn video[doc & {:keys [src options] :or {options ""}}]
+  (str (new-paragraph doc)
+       "video::" src "[" options "]"))
+
+(defn literal[doc content]
+  (str (new-paragraph doc)
+       "....\n"
+       (new-paragraph content)
+       "...."))
+
+(defn sidebar[doc content]
+  (str (new-paragraph doc)
+       "****\n"
+       (new-paragraph content)
+       "****"))
+
+(defn blockquote[doc content]
+  (str (new-paragraph doc)
+       "----\n"
+       (new-paragraph content)
+       "----"))
+
+
