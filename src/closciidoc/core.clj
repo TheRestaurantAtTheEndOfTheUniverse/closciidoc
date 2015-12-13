@@ -5,7 +5,7 @@
 (defn document [& {:keys [title author] :or {title "Untitled" author ""}}]
 
   (str "= " title (if (> (count author) 0)
-                    "\nauthor"
+                    (str "\n" author)
                    )
        "\n")
 )
@@ -27,15 +27,14 @@
 (defn sup[content] (str (delimited "^" content)))
 (defn sub[content] (str (delimited "~" content)))
 
-(defn ol [doc & elems]
-  (str doc "\n"
-       (apply str (mapcat #(str ". " %1 "\n") elems))
+(defn ol [& elems]
+  (str (apply str (mapcat #(str ". " %1 "\n") elems))
        "\n"))
 
 (defn list-item [itemchar level content]
   (let [prefix (str (apply str (repeat level itemchar)))]
     (str "\n"
-         prefix
+         prefix " "
          content
          "\n")))
 
@@ -63,7 +62,7 @@
 
 
 (defn- admon[type content]
-  (str type " " content)
+  (finish-paragraph (str "\n" type " " content))
 )
 
 (defn note[content]
@@ -86,30 +85,30 @@
   (admon "CAUTION:" content)
 )
 
-(defn image[doc & {:keys [src options] :or {options ""}}]
-  (str (new-paragraph doc)
-       "image::" src "[" options "]"))
+(defn image[& {:keys [src options] :or {options ""}}]
+  (str "image::" src "[" options "]"))
 
-(defn video[doc & {:keys [src options] :or {options ""}}]
-  (str (new-paragraph doc)
-       "video::" src "[" options "]"))
+(defn video[& {:keys [src options] :or {options ""}}]
+  (str "video::" src "[" options "]"))
 
-(defn literal[doc content]
-  (str (new-paragraph doc)
-       "....\n"
-       (new-paragraph content)
-       "...."))
+(defn literal[content]
+  (str "\n....\n"
+       content
+       "\n....\n\n"))
 
-(defn sidebar[doc content]
-  (str (new-paragraph doc)
-       "****\n"
-       (new-paragraph content)
-       "****"))
+(defn sidebar[content]
+  (str  "\n****\n"
+       content
+       "\n****\n\n"))
 
-(defn blockquote[doc content]
-  (str (new-paragraph doc)
-       "----\n"
-       (new-paragraph content)
-       "----"))
+(defn blockquote[content]
+  (str "\n----\n"
+       content
+       "\n----\n\n"))
 
+(defn anchor[name]
+  (str "[[" name "]]"))
+
+(defn internal-link[target]
+  (str "[[" target "]]"))
 
