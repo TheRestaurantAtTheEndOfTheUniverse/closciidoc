@@ -50,8 +50,7 @@
                                             (subvec element-vec 1))
           :else (recur attrs (conj sub-elements (first element-vec))
                        (subvec element-vec 1)))
-    )
-)
+    ))
 
 (defn- attrs?[element]
   (and (vector? element)
@@ -63,49 +62,48 @@
 )
 
 (defn convert [element opts]
-  (if (string? element)
-    element
-    (let [[attrs content] (separate-content (subvec element 1))]
-      (condp = (first element)
-       :doc (str (document :title (:title attrs) :author (:author attrs))
-                 (process content opts))
-       :section (str (section :title (:title attrs) :level (:section opts))
-                     (process content                              
-                              (assoc opts :section (inc (:section opts)))))
-       :ul (handle-list :unordered content opts)
-       :ol (handle-list :ordered content opts)
-       :note (note (process content opts))
-       :important (important (process content opts))
-       :tip (tip (process content opts))
-       :warning (warning (process content opts))
-       :caution (caution (process content opts))
-       :text (apply str (process content opts))
-       :comment (str "\n//" (first content) "\n")
-       :dl (handle-dl content opts)
-       ""
-      )
-)))
-
-(spit "/tmp/mist.adoc"
-      (asciidoc [:doc :title "Hey there" 
-                       :author "Ingo Kessinger"
-
-                 [:dl "so" "soso" "dies" "das"]
-
-                 [:section :title "Bla"]
-                 [:section :title "Bla2"
-                  [:ul "a sdafj asdjkf alksdjf aslkjdf akjalösdf aölsdkjf asljdkfaösl" 
-                   [:text "b"
-                    [:ul "ul1" "ul2"]]]
-                  [:comment "Separator"]
-                  [:comment]
-           [:ol "ol1" [:text "ol2"
-                       [:ol "ol2.1" "ol2.2"]]]
-                  [:note "This is a note"]
-                  [:image "test.jpg"]
-                  [:section :title "Sub"]]
-                 ]
-                ))
+  (cond (string? element) element
+        (vector? element) (let [[attrs content] (separate-content (subvec element 1))]
+                            (condp = (first element)
+                              :doc (str (document :title (:title attrs) :author (:author attrs))
+                                        (process content opts))
+                              :section (str (section :title (:title attrs) :level (:section opts))
+                                            (process content                              
+                                                     (assoc opts :section (inc (:section opts)))))
+                              :ul (handle-list :unordered content opts)
+                              :ol (handle-list :ordered content opts)
+                              :note (note (process content opts))
+                              :important (important (process content opts))
+                              :tip (tip (process content opts))
+                              :warning (warning (process content opts))
+                              :caution (caution (process content opts))
+                              :text (apply str (process content opts) "\n")
+                              :comment (str "\n//" (first content) "\n")
+                              :dl (handle-dl content opts)
+                              :pagebreak (str "\n<<<\n")
+                              :toc (str "\n:toc:\n")
+                              :table (let [has-options (not (nil? (:options attrs)))       
+                                           has-cols (not (nil? (:cols attrs)))
+                                           has-specifiers (or has-options has-cols)]
+                                       (str (if has-specifiers 
+                                              (str "[" 
+                                                   (apply str (interpose " "
+                                                              (vector 
+                                                               (if has-cols (str "cols=\"" (:cols attrs) "\""))
+                                                               (if has-options (str "options=\"" (:options attrs) "\"")))))
+                                                   "]\n|===\n")) 
+                                            (process content (assoc opts :cols has-cols)) "|===\n"))
+                              :row (str (process content opts) "\n" (if (:cols opts) "\n"))
+                              :cell (str (if-not (nil? (:type attrs)) (:type attrs)) 
+                                         "|" (process content opts) (if (:cols opts) "\n"))
+                              :internal-link (internal-link (:target attrs) (:text attrs))
+                              :anchor (anchor (:name attrs))
+                              :image (image :src (:src attrs))
+                              nil ("NIL occured here")
+                              ""
+                              ))
+        :else (str element)
+))
 
 
 

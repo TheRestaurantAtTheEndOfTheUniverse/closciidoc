@@ -109,6 +109,6 @@
 (defn anchor[name]
   (str "[[" name "]]"))
 
-(defn internal-link[target]
-  (str "[[" target "]]"))
+(defn internal-link[target text]
+  (str "<<" target "," text ">>"))
 
