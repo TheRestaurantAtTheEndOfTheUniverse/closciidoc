@@ -65,7 +65,9 @@
   (cond (string? element) element
         (vector? element) (let [[attrs content] (separate-content (subvec element 1))]
                             (condp = (first element)
-                              :doc (str (document :title (:title attrs) :author (:author attrs))
+                              :doc (str (document :title (:title attrs) 
+                                                  :author (:author attrs)
+                                                  :toc (:toc attrs))
                                         (process content opts))
                               :section (str (section :title (:title attrs) :level (:section opts))
                                             (process content                              
@@ -78,6 +80,7 @@
                               :warning (warning (process content opts))
                               :caution (caution (process content opts))
                               :text (apply str (process content opts) "\n")
+                              :bf (bf (process content opts))
                               :comment (str "\n//" (first content) "\n")
                               :dl (handle-dl content opts)
                               :pagebreak (str "\n<<<\n")
@@ -98,7 +101,7 @@
                                          "|" (process content opts) (if (:cols opts) "\n"))
                               :internal-link (internal-link (:target attrs) (:text attrs))
                               :anchor (anchor (:name attrs))
-                              :image (image :src (:src attrs))
+                              :image (image :src (:src attrs))                              
                               nil ("NIL occured here")
                               ""
                               ))

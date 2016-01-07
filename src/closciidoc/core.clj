@@ -2,11 +2,13 @@
   (:require [clojure.string :as str]))
 
 
-(defn document [& {:keys [title author] :or {title "Untitled" author ""}}]
+(defn document [& {:keys [title author toc] :or {title "Untitled" author "" toc false}}]
 
   (str "= " title (if (> (count author) 0)
                     (str "\n" author)
                    )
+       (if toc
+         "\n:toc:")
        "\n")
 )
 
@@ -23,7 +25,7 @@
 
 (defn it[content] (str (delimited "_" content)))
 (defn bf[content] (str (delimited "*" content)))
-(defn mo[content] (str (delimited "`" content)))
+(defn tt[content] (str (delimited "+" content)))
 (defn sup[content] (str (delimited "^" content)))
 (defn sub[content] (str (delimited "~" content)))
 
@@ -86,7 +88,7 @@
 )
 
 (defn image[& {:keys [src options] :or {options ""}}]
-  (str "image::" src "[" options "]"))
+  (str "image::" src "[" options "]\n"))
 
 (defn video[& {:keys [src options] :or {options ""}}]
   (str "video::" src "[" options "]"))
